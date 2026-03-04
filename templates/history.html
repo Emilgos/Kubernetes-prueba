@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% set title = "Historial" %}
+{% set active = "history" %}
+{% block content %}
+<section class="bg-white rounded-xl p-4 shadow-sm mb-4">
+  <h2 class="font-bold mb-3">Filtros</h2>
+  <form method="get" class="grid md:grid-cols-5 gap-2">
+    <input name="q" value="{{ filters.q }}" class="rounded-lg border-slate-300" placeholder="Buscar descripción">
+    <select name="category_id" class="rounded-lg border-slate-300">
+      <option value="">Todas las categorías</option>
+      {% for c in data.categories %}
+      <option value="{{ c.id }}" {% if filters.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="kind" class="rounded-lg border-slate-300">
+      <option value="">Todos los tipos</option>
+      <option value="expense" {% if filters.kind == 'expense' %}selected{% endif %}>Gastos</option>
+      <option value="income" {% if filters.kind == 'income' %}selected{% endif %}>Ingresos</option>
+    </select>
+    <input type="month" name="month" value="{{ filters.month }}" class="rounded-lg border-slate-300">
+    <button class="rounded-lg bg-blue-600 text-white font-semibold">Aplicar</button>
+  </form>
+</section>
+
+<section class="grid lg:grid-cols-2 gap-4">
+  <article class="bg-white rounded-xl p-4 shadow-sm">
+    <h2 class="font-bold mb-3">Transacciones</h2>
+    <div class="space-y-2 max-h-[420px] overflow-auto pr-1">
+      {% for t in transactions %}
+      <div class="border rounded-lg p-3 flex justify-between items-center">
+        <div>
+          <p class="font-semibold text-sm">{{ t.description }}</p>
+          <p class="text-xs text-slate-500">{{ t.date }} · {{ category_map.get(t.category_id, {"name": t.category_id}).name }}</p>
+        </div>
+        <p class="font-bold {% if t.kind == 'income' %}text-emerald-600{% else %}text-rose-600{% endif %}">
+          {% if t.kind == 'income' %}+{% else %}-{% endif %}{{ data.currency }}{{ "%.2f"|format(t.amount) }}
+        </p>
+      </div>
+      {% else %}
+      <p class="text-sm text-slate-500">No hay resultados para estos filtros.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="bg-white rounded-xl p-4 shadow-sm">
+    <h2 class="font-bold mb-3">Tendencia últimos 6 meses</h2>
+    <div class="space-y-2">
+      {% for r in trends %}
+      <div class="border rounded-lg p-2 text-sm">
+        <p class="font-semibold mb-1">{{ r.month }}</p>
+        <div class="flex justify-between text-emerald-600"><span>Ingresos</span><span>{{ data.currency }}{{ "%.2f"|format(r.income) }}</span></div>
+        <div class="flex justify-between text-rose-600"><span>Gastos</span><span>{{ data.currency }}{{ "%.2f"|format(r.expense) }}</span></div>
+        <div class="flex justify-between font-bold {% if r.net >= 0 %}text-emerald-700{% else %}text-rose-700{% endif %}"><span>Neto</span><span>{{ data.currency }}{{ "%.2f"|format(r.net) }}</span></div>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

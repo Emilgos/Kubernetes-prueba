@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set title = "Dashboard" %}
+{% set active = "dashboard" %}
+{% block content %}
+<section class="grid md:grid-cols-3 gap-4 mb-6">
+  <article class="bg-white rounded-xl p-4 shadow-sm">
+    <p class="text-sm text-slate-500">Saldo total</p>
+    <p class="text-2xl font-extrabold">{{ data.currency }}{{ "%.2f"|format(metrics.balance) }}</p>
+  </article>
+  <article class="bg-white rounded-xl p-4 shadow-sm">
+    <p class="text-sm text-slate-500">Ingresos del mes</p>
+    <p class="text-2xl font-extrabold text-emerald-600">{{ data.currency }}{{ "%.2f"|format(metrics.income_month) }}</p>
+  </article>
+  <article class="bg-white rounded-xl p-4 shadow-sm">
+    <p class="text-sm text-slate-500">Gastos del mes</p>
+    <p class="text-2xl font-extrabold text-rose-600">{{ data.currency }}{{ "%.2f"|format(metrics.expense_month) }}</p>
+  </article>
+</section>
+
+<section class="grid lg:grid-cols-2 gap-4 mb-6">
+  <article class="bg-white rounded-xl p-4 shadow-sm">
+    <h2 class="font-bold mb-3">Gasto por categoría (mes actual)</h2>
+    {% if metrics.chart_rows %}
+      {% set top = metrics.chart_rows[0].amount %}
+      <div class="space-y-3">
+      {% for row in metrics.chart_rows %}
+        {% set w = (row.amount / top * 100) if top > 0 else 0 %}
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span>{{ row.category }}</span>
+            <span>{{ data.currency }}{{ "%.2f"|format(row.amount) }}</span>
+          </div>
+          <div class="h-2 rounded bg-slate-200">
+            <div class="h-2 rounded bg-blue-600" style="width: {{ w }}%"></div>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-slate-500">No hay gastos este mes.</p>
+    {% endif %}
+  </article>
+
+  <article class="bg-white rounded-xl p-4 shadow-sm">
+    <h2 class="font-bold mb-3">Presupuestos (resumen)</h2>
+    <div class="space-y-3">
+      {% for b in budget_rows %}
+      <div>
+        <div class="flex justify-between text-sm mb-1">
+          <span>{{ b.name }}</span>
+          <span>{{ data.currency }}{{ "%.0f"|format(b.spent) }} / {{ data.currency }}{{ "%.0f"|format(b.limit) }}</span>
+        </div>
+        <div class="h-2 rounded bg-slate-200">
+          <div class="h-2 rounded {% if b.status == 'danger' %}bg-rose-500{% elif b.status == 'warning' %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width: {{ b.pct }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="bg-white rounded-xl p-4 shadow-sm">
+  <h2 class="font-bold mb-3">Actividad reciente</h2>
+  <div class="space-y-2">
+    {% for t in recent %}
+    <div class="flex items-center justify-between border-b last:border-b-0 py-2">
+      <div>
+        <p class="font-semibold text-sm">{{ t.description }}</p>
+        <p class="text-xs text-slate-500">{{ t.date }} · {{ category_map.get(t.category_id, {"name": t.category_id}).name }}</p>
+      </div>
+      <p class="font-bold {% if t.kind == 'income' %}text-emerald-600{% else %}text-rose-600{% endif %}">
+        {% if t.kind == 'income' %}+{% else %}-{% endif %}{{ data.currency }}{{ "%.2f"|format(t.amount) }}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
